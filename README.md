@@ -114,8 +114,82 @@ _Optional (non-interactive)_: `--yes` to auto-confirm, `--purge` to delete profi
 - **webapp-run** picks your browser; Chromium family launches with `--app=<URL>` (plus `--user-data-dir` and `--class`), Firefox opens the URL normally.
 - **webapp-remover.sh** lists launchers, lets you pick one, removes the `.desktop` and icon, and can purge the profile.
 
+## Troubleshooting: 
+### Wrong app opens instead of your browser:
+
+If launching a web app opens **some other program** (e.g., a remote-desktop client) instead of your browser, your system’s **MIME defaults** for `http/https` (and/or `text/html`) are most likely pointing to the wrong `.desktop` file.
+
+### 1) Diagnose
+Check what your system thinks the default web browser is and which app handles web links:
+```bash
+xdg-settings get default-web-browser 2>/dev/null || echo "(xdg-settings not available)"
+xdg-mime query default x-scheme-handler/http
+xdg-mime query default x-scheme-handler/https
+xdg-mime query default text/html
+```
+If any of those show something that’s **not your browser** (e.g., `rustdesk.desktop`), that’s the issue.
+
+### 2) Find your browser’s desktop ID
+Look up the `.desktop` file for your browser (examples: `brave-browser.desktop`, `chromium.desktop`, `google-chrome.desktop`, `vivaldi-stable.desktop`, `microsoft-edge.desktop`, `opera.desktop`, `firefox.desktop`, `librewolf.desktop`, etc.):
+```bash
+grep -Ril 'Exec=.*<browser-binary>' /usr/share/applications ~/.local/share/applications 2>/dev/null
+# examples:
+#   <browser-binary> = brave-browser | chromium | google-chrome | vivaldi-stable | microsoft-edge | opera | firefox | librewolf
+```
+Note the filename you find, e.g. `brave-browser.desktop`. We’ll call it `<YOUR_BROWSER.desktop>` below.
+
+### 3) Set your browser as the default handler
+```bash
+xdg-mime default <YOUR_BROWSER.desktop> x-scheme-handler/http
+xdg-mime default <YOUR_BROWSER.desktop> x-scheme-handler/https
+xdg-mime default <YOUR_BROWSER.desktop> text/html
+xdg-settings set default-web-browser <YOUR_BROWSER.desktop> 2>/dev/null || true
+update-desktop-database ~/.local/share/applications 2>/dev/null || true
+```
+
+### 4) Verify and sanity test
+```bash
+xdg-mime query default x-scheme-handler/http
+xdg-mime query default x-scheme-handler/https
+xdg-mime query default text/html
+# → all three should print <YOUR_BROWSER.desktop>
+
+xdg-open https://example.com   # should now open your browser
+```
+
+### 5) If it still opens the wrong app
+User config files may have pinned an override. Replace any bad entries:
+```bash
+grep -Ei 'x-scheme-handler/(http|https)|text/html' \
+  ~/.config/mimeapps.list ~/.local/share/applications/mimeapps.list 2>/dev/null
+
+# replace a wrong handler (example: rustdesk.desktop) with your browser:
+sed -i 's/rustdesk\.desktop/<YOUR_BROWSER.desktop>/g' \
+  ~/.config/mimeapps.list ~/.local/share/applications/mimeapps.list 2>/dev/null || true
+```
+Alternative using GLib’s tool:
+```bash
+gio mime x-scheme-handler/http  <YOUR_BROWSER.desktop>
+gio mime x-scheme-handler/https <YOUR_BROWSER.desktop>
+gio mime text/html              <YOUR_BROWSER.desktop>
+```
+
+### 6) Optional: help the launcher pick your browser explicitly
+If your environment is minimal (tiling WM, no DE), it can help to set `$BROWSER`:
+```bash
+# temporary for this shell:
+export BROWSER=<browser-binary>    # e.g., brave-browser, chromium, firefox
+
+# persistent:
+echo 'export BROWSER=<browser-binary>' >> ~/.profile
+```
+Then log out/in (or source your profile) and try launching the web app again.
+
+> Tip: If you use **dmenu_run**, it doesn’t read `.desktop` files. Use `i3-dmenu-desktop` or `rofi -show drun`, or create small wrappers in `~/.local/bin` that call `gtk-launch <id>` so `dmenu_run` can list them.
+
+
 ## License
-... Do what ever you want with it. There is no license.
+0BSD ... Do what ever you want with it.
 
 ## Credits
 DHH -  [Omarchy](https://omarchy.org/)
