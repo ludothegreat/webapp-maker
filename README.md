@@ -1,6 +1,6 @@
 # webapp maker
-
 Turn any website into a native-looking Linux app.
+![Animated GIF showing how webapp-maker works.](webapp-maker.gif)
 
 `webapp-maker.sh` creates a `.desktop` launcher with icon and its own browser profile.  
 `webapp-remover.sh` lists and removes web apps interactively.
