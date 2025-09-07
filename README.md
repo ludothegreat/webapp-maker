@@ -94,4 +94,26 @@ _Optional (non-interactive)_: `--yes` to auto-confirm, `--purge` to delete profi
 ## Credits
 DHH -  [Omarchy](https://omarchy.org/)
 
-## Possible 
+## To-Do / Ideas (possible add-ons)
+
+These scripts are **not** included by default, but are ideas I might add later.
+
+### 1) Batch remove by substring (`webapp-remove-matching.sh`)
+Remove any launchers whose **Name** or **id** contains a substring (case-insensitive). Prompt for confirmation then calls `webapp-remover.sh` for each match.
+
+**Example**
+```bash
+# plan: remove everything with "google" in the name/id
+./webapp-remove-matching.sh google
+```
+
+### 2) One-off migrator from old entries (`webapp-migrate-one.sh`)
+Recreate an older/compatible `.desktop` as a new **webapp maker** entry (using `webapp-run`), then remove the old one.
+
+**Example**
+```bash
+# migrate a single legacy launcher into the new format
+./webapp-migrate-one.sh "$HOME/.local/share/applications/Basecamp.desktop"
+```
+
+> If these are interesting to you, open an issue or PR.
