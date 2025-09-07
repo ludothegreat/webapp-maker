@@ -58,21 +58,21 @@ Icon:
   ~/.local/share/icons/hicolor/256x256/apps/teams.png
 Run from your app menu as: Teams
 ```
-## Optional: add shell aliases for quick access
+Optional: add shell aliases for quick access
 
 Run these from the folder where the scripts live so `$PWD` points to the right path.
 
-### Bashrc
+Bashrc
 ```bash
 printf '\n# webapp maker aliases\nalias webapp-make="%s/webapp-maker.sh"\nalias webapp-remove="%s/webapp-remover.sh"\n' "$PWD" "$PWD" >> ~/.bashrc && . ~/.bashrc
 ```
 
-### Zshrc
+Zshrc
 ```bash
 printf '\n# webapp maker aliases\nalias webapp-make="%s/webapp-maker.sh"\nalias webapp-remove="%s/webapp-remover.sh"\n' "$PWD" "$PWD" >> ~/.zshrc && source ~/.zshrc
 ```
 
-### If you feel lucky, auto-detect your shell
+If you feel lucky, auto-detect your shell - it has some quarks sometimes.
 ```bash
 rc="$([ -n "$ZSH_VERSION" ] && echo ~/.zshrc || { [ -n "$BASH_VERSION" ] && echo ~/.bashrc || echo ~/.bashrc; })"; printf '\n# webapp maker aliases\nalias webapp-make="%s/webapp-maker.sh"\nalias webapp-remove="%s/webapp-remover.sh"\n' "$PWD" "$PWD" >> "$rc" && { [ -n "$ZSH_VERSION" ] && source ~/.zshrc || [ -n "$BASH_VERSION" ] && . ~/.bashrc || :; }
 ```
