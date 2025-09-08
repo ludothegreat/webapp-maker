@@ -3,7 +3,6 @@
 # webapp-Maker: create a native launcher for a website (clean-room rewrite)
 #
 # Features:
-# - No gum dependency (plain read prompts; accepts CLI args)
 # - Uses curl or wget (whichever is available)
 # - Installs a tiny launcher to ~/.local/bin/webapp-run (Chromium-family app windows; Firefox fallback)
 # - Per-app isolated profile dir; stable WMClass for window grouping
@@ -168,7 +167,7 @@ EOF
 
 chmod 0644 "$desktop_path"
 
-# Best-effort desktop/icon db refresh
+# Desktop/icon db refresh
 have desktop-file-validate && desktop-file-validate "$desktop_path" >/dev/null 2>&1 || true
 have update-desktop-database && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 have gtk-update-icon-cache && gtk-update-icon-cache -q "$data_dir/icons" >/dev/null 2>&1 || true
