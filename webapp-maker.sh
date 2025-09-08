@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# webapp-forge: create a native launcher for a website (clean-room rewrite)
+# webapp-Maker: create a native launcher for a website (clean-room rewrite)
 #
 # Features:
 # - No gum dependency (plain read prompts; accepts CLI args)
@@ -120,7 +120,7 @@ site="${2-}"
 icon_url="${3-}"
 
 if [[ $# -lt 3 ]]; then
-  echo "Web App Forge — create a launcher"
+  echo "Web App Maker — create a launcher"
   ask name     "App name"           "My Web App"
   ask site     "URL"                "https://example.org"
   ask icon_url "Icon URL (PNG)"     "https://example.org/icon.png"
