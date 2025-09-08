@@ -31,7 +31,7 @@ desktop_get() {
 # Y/N prompt
 confirm() { local a; read -rp "$1 [y/N]: " a; [[ "${a,,}" == y || "${a,,}" == yes ]]; }
 
-# Desktop/icon cache refresh (best-effort)
+# Desktop/icon cache refresh
 refresh_db() {
   have desktop-file-validate && desktop-file-validate "$1" >/dev/null 2>&1 || true
   have update-desktop-database && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
@@ -86,7 +86,6 @@ list_all() {
 # ---------- UX: mostly flagless ----------
 auto_yes=false
 auto_purge=false
-# Accept optional flags for scripting, but you can ignore them
 for arg in "$@"; do
   case "$arg" in
     --yes) auto_yes=true ;;
@@ -185,7 +184,7 @@ say "  Desktop: $desktop_path"
 [[ -n "${icon_path:-}" ]] && say "  Icon:    $icon_path"
 [[ -n "${profile_dir:-}" ]] && say "  Profile: $profile_dir"
 
-# Warn on non-forge kinds (but no flags required)
+# Warn on non-maker kinds (but no flags required)
 case "$kind" in
   compat) warn "This looks like an older/compatible entry."; warn "Proceed only if you created it."; ;;
   candidate) warn "This looks like a candidate (heuristic)."; warn "Proceed only if you’re sure."; ;;
