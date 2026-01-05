@@ -7,15 +7,15 @@ Demo:
 
 ## Features
 
-- 🚀 **Simple CLI** - Create webapp launchers with a single command
-- 🎨 **Icon Support** - Download from URL or use local files (PNG, SVG, etc.)
-- 🔧 **Fully Configurable** - Global and per-app configuration files
-- 🌐 **Smart Browser Detection** - Auto-detects your default browser with fallbacks
-- 🪟 **Wayland & X11 Support** - Works on Sway, Hyprland, KDE Plasma, GNOME, and more
-- 📦 **Isolated Profiles** - Each webapp gets its own browser profile
-- 🛠️ **Management Tools** - List, update, test, export, and backup webapps
-- ✅ **Icon Validation** - Validates icons and auto-converts SVG to PNG
-- 🏷️ **Smart Categories** - Auto-detects desktop file categories based on URL
+- **Simple CLI** - Create webapp launchers with a single command
+- **Icon Support** - Download from URL or use local files (PNG, SVG, etc.)
+- **Fully Configurable** - Global and per-app configuration files
+- **Smart Browser Detection** - Auto-detects your default browser with fallbacks
+- **Wayland & X11 Support** - Works on Sway, Hyprland, KDE Plasma, GNOME, and more
+- **Isolated Profiles** - Each webapp gets its own browser profile
+- **Management Tools** - List, update, test, export, and backup webapps
+- **Icon Validation** - Validates icons and auto-converts SVG to PNG
+- **Smart Categories** - Auto-detects desktop file categories based on URL
 
 ## Installation
 
@@ -394,12 +394,8 @@ Optional (for enhanced features):
 
 ## License
 
-[Add your license here]
+0BSD - This project is provided as-is, without warranty. You are responsible for complying with applicable laws and regulations.
 
 ## Contributing
 
-Contributions welcome! Please feel free to submit issues or pull requests.
-
-## Credits
-
-Created with ❤️ for the Linux desktop community.
+Contributions welcome! Please feel free to submit issues or pull requests. By contributing, you agree that your contributions will be licensed under the 0BSD license.
