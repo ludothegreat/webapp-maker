@@ -806,7 +806,7 @@ parse_args() {
         MODE="backup"
         shift
         ;;
-      --interactive|--tui|-i)
+      --interactive|--tui)
         MODE="tui"
         shift
         ;;
@@ -1190,11 +1190,11 @@ case "$MODE" in
     backup_all
     exit 0
     ;;
-  tui)
-    # Run TUI main loop
-    while true; do
-      local main_choice
-      main_choice=$(tui_menu "Webapp Maker - Main Menu" \
+# TUI main loop function (defined before case statement)
+run_tui_main() {
+  while true; do
+    local main_choice
+    main_choice=$(tui_menu "Webapp Maker - Main Menu" \
         "Create New Webapp" \
         "List Webapps" \
         "View Webapp Info" \
@@ -1357,19 +1357,20 @@ case "$MODE" in
         8) break ;;
       esac
     done
-    exit 0
-    ;;
-  update)
+}
+
+# Continue with update mode handling
+if [[ "$MODE" == "update" ]]; then
     # Update mode - will be handled below
     [[ -z "$APP_ID" ]] && fail "App ID required for --update (use --list to see available apps)"
-    local desktop_path="$apps_dir/${APP_ID}.desktop"
+    desktop_path="$apps_dir/${APP_ID}.desktop"
     [[ -f "$desktop_path" ]] || fail "Webapp not found: $APP_ID"
     
     # Load existing values
     name="${name:-$(desktop_get Name "$desktop_path")}"
     # Extract URL from Exec if not provided
     if [[ -z "${site:-}" ]]; then
-      local exec_line="$(desktop_get Exec "$desktop_path")"
+      exec_line="$(desktop_get Exec "$desktop_path")"
       read -r -a exec_parts <<<"$exec_line"
       for part in "${exec_parts[@]}"; do
         if [[ "$part" =~ ^https?:// ]]; then
@@ -1383,8 +1384,10 @@ case "$MODE" in
       icon_url="$(desktop_get Icon "$desktop_path")"
       [[ "$icon_url" == "$icons_dir/"* ]] && icon_url=""  # Will reuse existing
     fi
-    ;;
-  create)
+fi
+
+# Continue with create mode if needed
+if [[ "$MODE" == "create" ]]; then
     # Create mode - continue with normal flow
     if [[ -z "${name:-}" || -z "${site:-}" || -z "${icon_url:-}" ]]; then
       echo "Web App Forge — create a launcher"
@@ -1392,8 +1395,7 @@ case "$MODE" in
       [[ -z "${site:-}" ]] && ask site "URL" "https://example.org"
       [[ -z "${icon_url:-}" ]] && ask icon_url "Icon URL or path" "https://example.org/icon.png"
     fi
-    ;;
-esac
+fi
 
 [[ -n "$name" && -n "$site" && -n "$icon_url" ]] || fail "name, URL, and icon are required"
 
@@ -1612,8 +1614,21 @@ have update-desktop-database && update-desktop-database "$apps_dir" >/dev/null 2
 icon_cache_dir="$(dirname "$icons_dir")"
 have gtk-update-icon-cache && gtk-update-icon-cache -q "$icon_cache_dir" >/dev/null 2>&1 || true
 
+# Success message
 if [[ "$MODE" == "update" ]]; then
-  printf 'Updated launcher:\n  %s\nIcon:\n  %s\nRun from your app menu as: %s\n' "$desktop_path" "$icon_path" "$name"
+  printf '\n✓ Updated launcher successfully!\n'
+  printf '  Desktop file: %s\n' "$desktop_path"
+  printf '  Icon:         %s\n' "$icon_path"
+  printf '  Profile:      %s\n' "$profile_dir"
+  printf '  App name:     %s\n' "$name"
+  printf '\nThe webapp should appear in your application menu shortly.\n'
+  printf 'If it doesn\'t appear, try: update-desktop-database %s\n' "$apps_dir"
 else
-  printf 'Created launcher:\n  %s\nIcon:\n  %s\nRun from your app menu as: %s\n' "$desktop_path" "$icon_path" "$name"
+  printf '\n✓ Created launcher successfully!\n'
+  printf '  Desktop file: %s\n' "$desktop_path"
+  printf '  Icon:         %s\n' "$icon_path"
+  printf '  Profile:      %s\n' "$profile_dir"
+  printf '  App name:     %s\n' "$name"
+  printf '\nThe webapp should appear in your application menu shortly.\n'
+  printf 'If it doesn\'t appear, try: update-desktop-database %s\n' "$apps_dir"
 fi
