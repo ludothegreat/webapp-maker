@@ -27,6 +27,124 @@ confirm() {
   [[ "${a,,}" == y || "${a,,}" == yes ]]
 }
 
+# --------------------------- TUI functions ---------------------------
+USE_DIALOG=0
+if have dialog; then
+  USE_DIALOG=1
+fi
+
+# TUI input function (works with or without dialog)
+tui_input() {
+  local var="$1"
+  local prompt="$2"
+  local default="${3:-}"
+  
+  if [[ $USE_DIALOG -eq 1 ]]; then
+    local result
+    result=$(dialog --stdout --inputbox "$prompt" 0 0 "$default" 2>&1)
+    [[ $? -eq 0 ]] && printf -v "$var" '%s' "$result" || return 1
+  else
+    ask "$var" "$prompt" "$default"
+  fi
+}
+
+# TUI menu function
+tui_menu() {
+  local title="$1"
+  shift
+  local items=("$@")
+  local choice
+  
+  if [[ $USE_DIALOG -eq 1 ]]; then
+    local menu_items=()
+    local i=0
+    for item in "${items[@]}"; do
+      menu_items+=("$i" "$item")
+      ((i++))
+    done
+    choice=$(dialog --stdout --menu "$title" 0 0 0 "${menu_items[@]}" 2>&1)
+    [[ $? -eq 0 ]] && echo "$choice" || return 1
+  else
+    clear
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "$title"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    local i=0
+    for item in "${items[@]}"; do
+      printf "  %d) %s\n" "$i" "$item"
+      ((i++))
+    done
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    while true; do
+      read -rp "Select option [0-$((i-1))]: " choice
+      [[ "$choice" =~ ^[0-9]+$ && "$choice" -ge 0 && "$choice" -lt $i ]] && break
+      echo "Invalid option. Please enter a number between 0 and $((i-1))."
+    done
+    echo "$choice"
+  fi
+}
+
+# TUI message box
+tui_msg() {
+  local title="$1"
+  local message="$2"
+  
+  if [[ $USE_DIALOG -eq 1 ]]; then
+    dialog --msgbox "$message" 0 0
+  else
+    clear
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "$title"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "$message"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    read -rp "Press Enter to continue..."
+  fi
+}
+
+# TUI yes/no dialog
+tui_confirm() {
+  local prompt="$1"
+  
+  if [[ $USE_DIALOG -eq 1 ]]; then
+    dialog --yesno "$prompt" 0 0
+    return $?
+  else
+    confirm "$prompt"
+  fi
+}
+
+# Select webapp from list
+tui_select_webapp() {
+  local title="$1"
+  local apps=()
+  local app_ids=()
+  
+  shopt -s nullglob
+  for f in "$apps_dir"/*.desktop; do
+    [[ -f "$f" ]] || continue
+    local exec_line="$(desktop_get Exec "$f")"
+    if [[ -n "$exec_line" ]] && grep -qE 'webapp-run' <<<"$exec_line"; then
+      local base="$(basename "${f%.*}")"
+      local nm="$(desktop_get Name "$f")"
+      apps+=("$nm (ID: $base)")
+      app_ids+=("$base")
+    fi
+  done
+  
+  if [[ ${#apps[@]} -eq 0 ]]; then
+    tui_msg "No Webapps" "No webapps found. Create one first!"
+    return 1
+  fi
+  
+  local choice
+  choice=$(tui_menu "$title" "${apps[@]}")
+  [[ -z "$choice" ]] && return 1
+  
+  echo "${app_ids[$choice]}"
+}
+
+
 ask() {
   # ask VAR "Prompt" "default"
   local __var="$1" __prompt="$2" __default="${3-}" __ans
@@ -628,6 +746,7 @@ COMMANDS:
   --clean-profiles    Remove orphaned profiles
   --export <app-id>   Export webapp configuration
   --backup             Backup all webapps
+  --interactive, -i    Launch interactive TUI mode
   --help, -h          Show this help message
 
 OPTIONS:
@@ -685,6 +804,10 @@ parse_args() {
         ;;
       --backup)
         MODE="backup"
+        shift
+        ;;
+      --interactive|--tui|-i)
+        MODE="tui"
         shift
         ;;
       --name|-n)
@@ -1065,6 +1188,175 @@ case "$MODE" in
     ;;
   backup)
     backup_all
+    exit 0
+    ;;
+  tui)
+    # Run TUI main loop
+    while true; do
+      local main_choice
+      main_choice=$(tui_menu "Webapp Maker - Main Menu" \
+        "Create New Webapp" \
+        "List Webapps" \
+        "View Webapp Info" \
+        "Update Webapp" \
+        "Test Webapp Launch" \
+        "Remove Webapp" \
+        "Manage Profiles" \
+        "Export/Backup" \
+        "Exit")
+      
+      [[ -z "$main_choice" ]] && break
+      
+      case "$main_choice" in
+        0)
+          # Create - call script recursively with args
+          local tui_name="" tui_site="" tui_icon=""
+          tui_input tui_name "Enter app name:" || continue
+          [[ -z "$tui_name" ]] && continue
+          tui_input tui_site "Enter URL:" "https://" || continue
+          [[ -z "$tui_site" ]] && continue
+          tui_input tui_icon "Enter icon URL or file path:" || continue
+          [[ -z "$tui_icon" ]] && continue
+          
+          if tui_confirm "Create webapp '$tui_name'?"; then
+            # Exit TUI and call script with creation args
+            exec "$0" "$tui_name" "$tui_site" "$tui_icon"
+          fi
+          ;;
+        1)
+          local output
+          output=$(list_webapps)
+          tui_msg "Installed Webapps" "$output"
+          ;;
+        2)
+          local app_id
+          app_id=$(tui_select_webapp "Select Webapp to View")
+          [[ -z "$app_id" ]] && continue
+          local output
+          output=$(show_info "$app_id")
+          tui_msg "Webapp Information" "$output"
+          ;;
+        3)
+          local app_id
+          app_id=$(tui_select_webapp "Select Webapp to Update")
+          [[ -z "$app_id" ]] && continue
+          
+          local desktop_path="$apps_dir/${app_id}.desktop"
+          local current_name="$(desktop_get Name "$desktop_path")"
+          local current_url=""
+          local exec_line="$(desktop_get Exec "$desktop_path")"
+          read -r -a exec_parts <<<"$exec_line"
+          for part in "${exec_parts[@]}"; do
+            if [[ "$part" =~ ^https?:// ]]; then
+              current_url="${part//\"/}"
+              break
+            fi
+          done
+          local current_icon="$(desktop_get Icon "$desktop_path")"
+          
+          local update_choice
+          update_choice=$(tui_menu "Update Webapp: $current_name" \
+            "Update Name" \
+            "Update URL" \
+            "Update Icon" \
+            "Cancel")
+          
+          [[ -z "$update_choice" ]] && continue
+          
+          case "$update_choice" in
+            0)
+              local new_name
+              tui_input new_name "Enter new name:" "$current_name" || continue
+              exec "$0" --update "$app_id" --name "$new_name"
+              ;;
+            1)
+              local new_url
+              tui_input new_url "Enter new URL:" "$current_url" || continue
+              exec "$0" --update "$app_id" --url "$new_url"
+              ;;
+            2)
+              local new_icon
+              tui_input new_icon "Enter new icon URL or path:" "$current_icon" || continue
+              exec "$0" --update "$app_id" --icon "$new_icon"
+              ;;
+            3) continue ;;
+          esac
+          ;;
+        4)
+          local app_id
+          app_id=$(tui_select_webapp "Select Webapp to Test")
+          [[ -z "$app_id" ]] && continue
+          if tui_confirm "Launch webapp '$app_id' for testing?"; then
+            test_launch "$app_id"
+            tui_msg "Test Launch" "Webapp launched. Check if the browser window opened."
+          fi
+          ;;
+        5)
+          local app_id
+          app_id=$(tui_select_webapp "Select Webapp to Remove")
+          [[ -z "$app_id" ]] && continue
+          local desktop_path="$apps_dir/${app_id}.desktop"
+          local app_name="$(desktop_get Name "$desktop_path")"
+          if tui_confirm "Remove webapp '$app_name' ($app_id)?"; then
+            if [[ -f "./webapp-remover.sh" ]]; then
+              ./webapp-remover.sh "$app_id" --yes
+            elif [[ -f "$(dirname "$0")/webapp-remover.sh" ]]; then
+              "$(dirname "$0")/webapp-remover.sh" "$app_id" --yes
+            else
+              rm -f "$desktop_path"
+              tui_msg "Removed" "Webapp '$app_name' has been removed."
+            fi
+          fi
+          ;;
+        6)
+          local profile_choice
+          profile_choice=$(tui_menu "Profile Management" \
+            "List Profiles" \
+            "Clean Orphaned Profiles" \
+            "Back")
+          [[ -z "$profile_choice" ]] && continue
+          case "$profile_choice" in
+            0)
+              local output
+              output=$(list_profiles)
+              tui_msg "Webapp Profiles" "$output"
+              ;;
+            1)
+              if tui_confirm "Remove orphaned profiles?"; then
+                clean_profiles
+                tui_msg "Cleanup Complete" "Orphaned profiles have been removed."
+              fi
+              ;;
+            2) continue ;;
+          esac
+          ;;
+        7)
+          local export_choice
+          export_choice=$(tui_menu "Export & Backup" \
+            "Export Single Webapp" \
+            "Backup All Webapps" \
+            "Back")
+          [[ -z "$export_choice" ]] && continue
+          case "$export_choice" in
+            0)
+              local app_id
+              app_id=$(tui_select_webapp "Select Webapp to Export")
+              [[ -z "$app_id" ]] && continue
+              export_webapp "$app_id"
+              tui_msg "Export Complete" "Webapp exported successfully."
+              ;;
+            1)
+              if tui_confirm "Backup all webapps?"; then
+                backup_all
+                tui_msg "Backup Complete" "All webapps have been backed up."
+              fi
+              ;;
+            2) continue ;;
+          esac
+          ;;
+        8) break ;;
+      esac
+    done
     exit 0
     ;;
   update)
