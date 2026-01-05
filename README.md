@@ -394,7 +394,7 @@ Optional (for enhanced features):
 
 ## License
 
-0BSD - This project is provided as-is, without warranty. You are responsible for complying with applicable laws and regulations.
+[OBSD](LICENSE) - This project is provided as-is, without warranty. You are responsible for complying with applicable laws and regulations.
 
 ## Contributing
 
