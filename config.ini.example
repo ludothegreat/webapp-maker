@@ -1,0 +1,72 @@
+# webapp-maker Configuration File Template
+# 
+# Copy this file to ~/.config/webapp-maker/config.ini (or $XDG_CONFIG_HOME/webapp-maker/config.ini)
+# and customize as needed. All fields are optional - defaults will be used if not specified.
+#
+# Environment variables can also override config values:
+#   WEBAPP_BROWSER_COMMAND=firefox
+#   WEBAPP_PATHS_DESKTOP_DIR=/custom/path
+#   etc.
+
+[browser]
+# Explicit browser command (e.g., "firefox", "chromium", "google-chrome", "brave")
+# If empty, auto-detect from system default browser
+# Examples:
+#   command=firefox
+#   command=chromium
+#   command=google-chrome-stable
+command=
+
+# Browser detection method: "xdg-settings", "desktop-file", "auto"
+# - "xdg-settings": Use xdg-settings to get default browser
+# - "desktop-file": Parse desktop files to find browser
+# - "auto": Try both methods (default)
+detection_method=auto
+
+# Fallback browsers to try if default browser is not found (comma-separated)
+# These will be checked in order if auto-detection fails
+fallbacks=chromium,firefox,google-chrome
+
+# Wayland mode: "auto" (detect), "force" (force Wayland), "x11" (force X11)
+# Note: This is usually auto-detected, but can be overridden if needed
+wayland_mode=auto
+
+[paths]
+# Desktop file directory (default: $XDG_DATA_HOME/applications)
+# Desktop files (.desktop) are stored here for launcher integration
+# Leave empty to use default: ~/.local/share/applications
+desktop_dir=
+
+# Icon directory (default: $XDG_DATA_HOME/icons/hicolor/256x256/apps)
+# Icons are stored here for application launchers
+# Leave empty to use default: ~/.local/share/icons/hicolor/256x256/apps
+icon_dir=
+
+# Profile directory base (default: $XDG_DATA_HOME/webapps)
+# Each webapp gets its own profile subdirectory here
+# Leave empty to use default: ~/.local/share/webapps
+profile_dir=
+
+# Binary/launcher directory (default: $HOME/.local/bin)
+# The webapp-run launcher script is installed here
+# Leave empty to use default: ~/.local/bin
+bin_dir=
+
+[app]
+# Default icon size (for future use)
+# Currently icons are stored at 256x256
+icon_size=256
+
+# WMClass prefix (default: "webapp-")
+# Used for window grouping and identification
+# Each app will have WMClass: <prefix><app-id>
+# Example: "webapp-gmail" if prefix is "webapp-" and app is "gmail"
+wmclass_prefix=webapp-
+
+# Additional browser flags (space-separated)
+# These flags will be passed to the browser when launching webapps
+# Examples:
+#   extra_flags=--disable-web-security
+#   extra_flags=--enable-features=VaapiVideoDecoder
+#   extra_flags=--enable-accelerated-video-decode
+extra_flags=
